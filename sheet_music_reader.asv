@@ -1,20 +1,10 @@
 clear
 
-% image constants
+% constants
 IMAGE_WIDTH = 1700;
-MIN_STAVE_WIDTH = 400;
-MIN_NOTE_RADIUS = 7;
-CLEF_WIDTH = 100;
-BOUND_HEIGHT = 40;
-
-% music constants
-FS = 4e3;
-BPM = 100;
-NOTE_LENGTH = BPM/60/4;
-NOTE_FREQS = [261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46];
 
 
-I = imread("Test Images/music5.jpg");
+I = imread("Test Images/music2.jpg");
 
 I_gray = rgb2gray(I); % convert to greyscale
 I_bin = imbinarize(I_gray); % threshold convert to binary image
@@ -26,7 +16,7 @@ M = round(IMAGE_WIDTH*M/N);
 N = IMAGE_WIDTH;
 I_inv = imresize(I_inv,[M,N]);
 
-stave_SE = strel('line',MIN_STAVE_WIDTH,0); % create line structuring element to find staves
+stave_SE = strel('line',400,0); % create line structuring element to find staves
 I_stave = imopen(I_inv,stave_SE); % erode then dilate to isolate staves
 
 % find the vertical coordinates of each stave line
@@ -87,12 +77,11 @@ end
 % compute possible note bounds
 note_bounds = stave_bounds;
 for i = 1:num_staves
-    note_bounds(i,1) = note_bounds(i,1) - BOUND_HEIGHT;
-    note_bounds(i,2) = note_bounds(i,2) + BOUND_HEIGHT;
-    note_bounds(i,3) = note_bounds(i,3) + CLEF_WIDTH;
+    note_bounds(i,2) = note_bounds(i,2) + 40;
+    note_bounds(i,3) = note_bounds(i,3) + 100;
 end
 
-note_SE = strel('disk',MIN_NOTE_RADIUS); % create disk structuring element to find notes
+note_SE = strel('disk',7); % create disk structuring element to find notes
 note_coords = [];
 notes = [];
 for i = 1:num_staves
@@ -129,14 +118,15 @@ I_notes_pre = I_inv & mask_notes_pre;
 I_notes = imopen(I_notes_pre,note_SE);
 
 % compile notes into song
+note_freqs = [261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46];
 song = [];
-t = 0:(1/FS):NOTE_LENGTH;
 for i = 1:length(notes)
-    song = [song 0.1*sin(2*pi*NOTE_FREQS(notes(i))*t)];
+    t = 0:0.00025:0.5;
+    song = [song 0.1*sin(2*pi*note_freqs(notes(i))*t)];
 end
 
 % play song
-sound(song,FS);
+sound(song);
 
 figure
 subplot(1,2,1), imshow(I_stave)
