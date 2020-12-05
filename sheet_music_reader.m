@@ -18,7 +18,7 @@ NOTES_ABOVE = 4;
 NOTE_FREQS = [220.00 246.94 261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46 783.99 880.00 987.77 1046.50];
 
 
-I = imread("Test Images/music2.jpg");
+I = imread("Test Images/music1.jpg");
 
 I_gray = rgb2gray(I); % convert to greyscale
 I_bin = imbinarize(I_gray); % threshold convert to binary image
@@ -66,9 +66,9 @@ line_dist = line_dist / (4*num_staves);
 
 % deterine note value thresholds
 thresh_dist = line_dist/2;
-thresh_top = stave_coords(i,1) - (thresh_dist/2 + thresh_dist*(NOTES_ABOVE));
-thresh_bot = stave_coords(i,5) + (thresh_dist/2 + thresh_dist*(NOTES_BELOW));
 for i = 1:num_staves
+    thresh_top = stave_coords(i,1) - (thresh_dist/2 + thresh_dist*(NOTES_ABOVE));
+    thresh_bot = stave_coords(i,5) + (thresh_dist/2 + thresh_dist*(NOTES_BELOW));
     note_threshs(i,:) = [thresh_top:thresh_dist:thresh_bot];
 end
 
