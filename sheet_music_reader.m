@@ -100,8 +100,13 @@ end
 % invert so notes increase by pitch value rather than pixel value
 notes = length(note_threshs(1,:)) - notes;
 
+% compile notes into song
+note_freqs = [261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46];
+song = [];
+for i = 1:length(notes)
+    t = 0:0.00025:1.0;
+    song = [song 0.5*sin(2*pi*note_freqs(notes(i))*t)];
+end
 
-
-% figure
-% subplot(1,2,1), imshow(I_notes)
-% subplot(1,2,2), imshow(I_stave)
+% play song
+sound(song);
