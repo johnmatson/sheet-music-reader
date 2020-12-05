@@ -1,7 +1,7 @@
 clear
 
 % image constants
-IMAGE_WIDTH = 1700;
+STD_WIDTH = 1700;
 MIN_STAVE_WIDTH = 400;
 MIN_NOTE_RADIUS = 6;
 CLEF_WIDTH = 100;
@@ -13,6 +13,7 @@ PIXEL_SKIPS = 5;
 FS = 4e3;
 BPM = 100;
 NOTE_LENGTH = BPM/60/4;
+VOLUME = 0.1;
 NOTES_BELOW = 4;
 NOTES_ABOVE = 4;
 NOTE_FREQS = [  220.00 246.94 261.63 293.66 329.63 349.23 ...
@@ -28,8 +29,8 @@ I_inv = imcomplement(I_bin); % invert image so data is true
 
 % resample image to standard resolution
 [M,N] = size(I_inv);
-M = round(IMAGE_WIDTH*M/N);
-N = IMAGE_WIDTH;
+M = round(STD_WIDTH*M/N);
+N = STD_WIDTH;
 I_inv = imresize(I_inv,[M,N]);
 
 % create line structuring element to find staves
@@ -157,7 +158,7 @@ notes = length(note_threshs(1,:)) - notes;
 song = [];
 t = 0:(1/FS):NOTE_LENGTH;
 for i = 1:length(notes)
-    song = [song 0.1*sin(2*pi*NOTE_FREQS(notes(i))*t)];
+    song = [song VOLUME*sin(2*pi*NOTE_FREQS(notes(i))*t)];
 end
 
 % play song
