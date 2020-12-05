@@ -3,18 +3,22 @@ clear
 % image constants
 IMAGE_WIDTH = 1700;
 MIN_STAVE_WIDTH = 400;
-MIN_NOTE_RADIUS = 7;
+MIN_NOTE_RADIUS = 6;
 CLEF_WIDTH = 100;
+END_WIDTH = 10;
 BOUND_HEIGHT = 40;
+PIXEL_SKIPS = 3;
 
 % music constants
 FS = 4e3;
 BPM = 100;
 NOTE_LENGTH = BPM/60/4;
-NOTE_FREQS = [261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46];
+NOTES_BELOW = 4;
+NOTES_ABOVE = 4;
+NOTE_FREQS = [220.00 246.94 261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46 783.99 880.00 987.77 1046.50];
 
 
-I = imread("Test Images/music5.jpg");
+I = imread("Test Images/music2.jpg");
 
 I_gray = rgb2gray(I); % convert to greyscale
 I_bin = imbinarize(I_gray); % threshold convert to binary image
@@ -61,8 +65,11 @@ end
 line_dist = line_dist / (4*num_staves);
 
 % deterine note value thresholds
+thresh_dist = line_dist/2;
+thresh_top = stave_coords(i,1) - (thresh_dist/2 + thresh_dist*(NOTES_ABOVE));
+thresh_bot = stave_coords(i,5) + (thresh_dist/2 + thresh_dist*(NOTES_BELOW));
 for i = 1:num_staves
-    note_threshs(i,:) = [(stave_coords(i,1)-0.25*line_dist):(line_dist/2):(stave_coords(i,5)+1.25*line_dist)];
+    note_threshs(i,:) = [thresh_top:thresh_dist:thresh_bot];
 end
 
 % compute stave bounds
@@ -70,16 +77,22 @@ stave_bounds = zeros(num_staves,4);
 for i = 1:num_staves
     stave_bounds(i,1) = stave_coords(i,1);
     stave_bounds(i,2) = stave_coords(i,5);
+    end_line = PIXEL_SKIPS;
     for j = round(N/2):-1:1
-        if ~I_stave(stave_coords(i,1),j)
+        if (~I_stave(stave_coords(i,1),j)) && (end_line <= 1)
             stave_bounds(i,3) = j;
             break
+        elseif ~I_stave(stave_coords(i,1),j)
+            end_line = end_line - 1;
         end
     end
+    end_line = PIXEL_SKIPS;
     for j = round(N/2):N
-        if ~I_stave(stave_coords(i,1),j)
+        if (~I_stave(stave_coords(i,1),j)) && (end_line <= 1)
             stave_bounds(i,4) = j;
             break
+        elseif ~I_stave(stave_coords(i,1),j)
+            end_line = end_line - 1;
         end
     end
 end
@@ -90,6 +103,7 @@ for i = 1:num_staves
     note_bounds(i,1) = note_bounds(i,1) - BOUND_HEIGHT;
     note_bounds(i,2) = note_bounds(i,2) + BOUND_HEIGHT;
     note_bounds(i,3) = note_bounds(i,3) + CLEF_WIDTH;
+    note_bounds(i,4) = note_bounds(i,4) - END_WIDTH;
 end
 
 note_SE = strel('disk',MIN_NOTE_RADIUS); % create disk structuring element to find notes
@@ -121,6 +135,7 @@ end
 % invert so notes increase by pitch value rather than pixel value
 notes = length(note_threshs(1,:)) - notes;
 
+% generate full notes-only image for viewing
 mask_notes_pre = zeros(M,N,'logical');
 for i = 1:num_staves
     mask_notes_pre(note_bounds(i,1):note_bounds(i,2),note_bounds(i,3):note_bounds(i,4)) = true;

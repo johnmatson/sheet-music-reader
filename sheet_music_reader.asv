@@ -1,7 +1,20 @@
 clear
 
-% constants
+% image constants
 IMAGE_WIDTH = 1700;
+MIN_STAVE_WIDTH = 400;
+MIN_NOTE_RADIUS = 6;
+CLEF_WIDTH = 100;
+BOUND_HEIGHT = 40;
+PIXEL_SKIPS = 2;
+
+% music constants
+FS = 4e3;
+BPM = 100;
+NOTE_LENGTH = BPM/60/4;
+NOTES_BELOW = 4;
+NOTES_ABOVE = 4;
+NOTE_FREQS = [220.00 246.94 261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46 783.99 880.00 987.77 1046.50];
 
 
 I = imread("Test Images/music2.jpg");
@@ -16,7 +29,7 @@ M = round(IMAGE_WIDTH*M/N);
 N = IMAGE_WIDTH;
 I_inv = imresize(I_inv,[M,N]);
 
-stave_SE = strel('line',400,0); % create line structuring element to find staves
+stave_SE = strel('line',MIN_STAVE_WIDTH,0); % create line structuring element to find staves
 I_stave = imopen(I_inv,stave_SE); % erode then dilate to isolate staves
 
 % find the vertical coordinates of each stave line
@@ -51,8 +64,11 @@ end
 line_dist = line_dist / (4*num_staves);
 
 % deterine note value thresholds
+thresh_dist = line_dist/2;
+thresh_top = stave_coords(i,1) - (thresh_dist/2 + thresh_dist*(NOTES_ABOVE));
+thresh_bot = stave_coords(i,5) + (thresh_dist/2 + thresh_dist*(NOTES_BELOW));
 for i = 1:num_staves
-    note_threshs(i,:) = [(stave_coords(i,1)-0.25*line_dist):(line_dist/2):(stave_coords(i,5)+1.25*line_dist)];
+    note_threshs(i,:) = [thresh_top:thresh_dist:thresh_bot];
 end
 
 % compute stave bounds
@@ -60,6 +76,7 @@ stave_bounds = zeros(num_staves,4);
 for i = 1:num_staves
     stave_bounds(i,1) = stave_coords(i,1);
     stave_bounds(i,2) = stave_coords(i,5);
+    end_line = PI
     for j = round(N/2):-1:1
         if ~I_stave(stave_coords(i,1),j)
             stave_bounds(i,3) = j;
@@ -77,11 +94,12 @@ end
 % compute possible note bounds
 note_bounds = stave_bounds;
 for i = 1:num_staves
-    note_bounds(i,2) = note_bounds(i,2) + 40;
-    note_bounds(i,3) = note_bounds(i,3) + 100;
+    note_bounds(i,1) = note_bounds(i,1) - BOUND_HEIGHT;
+    note_bounds(i,2) = note_bounds(i,2) + BOUND_HEIGHT;
+    note_bounds(i,3) = note_bounds(i,3) + CLEF_WIDTH;
 end
 
-note_SE = strel('disk',7); % create disk structuring element to find notes
+note_SE = strel('disk',MIN_NOTE_RADIUS); % create disk structuring element to find notes
 note_coords = [];
 notes = [];
 for i = 1:num_staves
@@ -110,6 +128,7 @@ end
 % invert so notes increase by pitch value rather than pixel value
 notes = length(note_threshs(1,:)) - notes;
 
+% generate full notes-only image for viewing
 mask_notes_pre = zeros(M,N,'logical');
 for i = 1:num_staves
     mask_notes_pre(note_bounds(i,1):note_bounds(i,2),note_bounds(i,3):note_bounds(i,4)) = true;
@@ -118,15 +137,14 @@ I_notes_pre = I_inv & mask_notes_pre;
 I_notes = imopen(I_notes_pre,note_SE);
 
 % compile notes into song
-note_freqs = [261.63 293.66 329.63 349.23 392.00 440.00 493.88 523.25 587.33 659.25 698.46];
 song = [];
+t = 0:(1/FS):NOTE_LENGTH;
 for i = 1:length(notes)
-    t = 0:0.00025:0.5;
-    song = [song 0.1*sin(2*pi*note_freqs(notes(i))*t)];
+    song = [song 0.1*sin(2*pi*NOTE_FREQS(notes(i))*t)];
 end
 
 % play song
-sound(song);
+sound(song,FS);
 
 figure
 subplot(1,2,1), imshow(I_stave)
