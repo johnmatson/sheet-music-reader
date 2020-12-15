@@ -160,10 +160,118 @@ With the coordinates of each of the stave lines recorded, we can now use the sta
 #### Result - Note Value Thresholds
 ![](Readme%20Images/7_note_value_thresholds.png)
 
-### Point Processing
+### Computing Stave & Note Bounds
 #### Source Code
 ```matlab
-
+% compute stave bounds
+stave_bounds = zeros(num_staves,4);
+for i = 1:num_staves
+    % bound 1 is top of stave
+    stave_bounds(i,1) = stave_coords(i,1);
+    
+    %bound 2 is bottom of stave
+    stave_bounds(i,2) = stave_coords(i,5);
+    
+    % bound 3 is left end of stave
+    % start from the middle and move left until the edge is found
+    for j = round(N/2):-1:1
+        if (~I_stave(stave_coords(i,1),j))
+            stave_bounds(i,3) = j;
+            break
+        end
+    end
+    
+    % bound 4 is right end of stave
+    % start from the middle and move right until the edge is found
+    for j = round(N/2):N
+        if (~I_stave(stave_coords(i,1),j))
+            stave_bounds(i,4) = j;
+            break
+        end
+    end
+end
+ 
+% compute possible note bounds
+note_bounds = stave_bounds;
+for i = 1:num_staves
+    note_bounds(i,1) = note_bounds(i,1) - BOUND_HEIGHT;
+    note_bounds(i,2) = note_bounds(i,2) + BOUND_HEIGHT;
+    note_bounds(i,3) = note_bounds(i,3) + CLEF_WIDTH;
+    note_bounds(i,4) = note_bounds(i,4) - END_WIDTH;
+end
 ```
 #### Explanation
-#### Result
+Before we attempt to isolate the notes themselves, we need to determine where the notes could possibly be located, so that we can discard other data – keeping in mind, our input could have words or other characters that could easily be confused with notes if not properly eliminated. We know the top and bottom of the staves are just the first and fifth stave lines. We then need to find the left and right edges. We identify these edges by starting on a stave line and tracing all the way along in each direction until we hit the end of the line.
+
+With the four bounds of the stave recorded, we use what we know about sheet music to determine the bounds of where notes could be located. We know that each stave begins with a clef, which we can discard, and that there is some dead space at the end. We also know that notes can be located within a few steps of the bottom and the top of the clef. By trial and error, we discover appropriate values to parameterize each of these four constants with.
+#### Result - Stave Bounds
+![](Readme%20Images/8_stave_bounds.png)
+#### Result - Note Bounds
+![](Readme%20Images/9_note_bounds.png)
+
+### Finding Notes & Determining Their Tone Values
+#### Source Code
+```matlab
+% create disk structuring element to find notes
+note_SE = strel('disk',MIN_NOTE_RADIUS);
+ 
+note_coords = [];
+notes = [];
+for i = 1:num_staves
+    % remove all data outside possible note areas for note detection
+    mask_notes_pre = zeros(M,N,'logical');
+    mask_notes_pre(note_bounds(i,1):note_bounds(i,2),...
+        note_bounds(i,3):note_bounds(i,4)) = true;
+    I_notes_pre = I_inv & mask_notes_pre;
+    
+    % erode then dilate to isolate notes
+    I_notes = imopen(I_notes_pre,note_SE);
+    
+    % find note coordinates
+    note_stats = regionprops('table',I_notes,'Centroid');
+    note_coords = note_stats.Centroid;
+    
+    % determine note values
+    for j = 1:length(note_coords)
+        coord = note_coords(j,2);
+        for k = 1:(length(note_threshs(i,:))-1)
+            if ((coord>note_threshs(i,k)) && (coord<note_threshs(i,k+1)))
+                notes = [notes;k];
+                break
+            end
+        end
+    end
+end
+% invert so notes increase by pitch value rather than pixel value
+notes = length(note_threshs(1,:)) - notes;
+```
+#### Explanation
+It is now time to find the notes. We begin by creating another structured element, but this time of “disk” type, with a radius akin to the size of the notes. We will use this structured element to once again perform an opening, but first we create a logical mask with our previously determined bounds, and discard all data outside said area. At this point we need to find the coordinates of each of the notes we have just isolated. Fortunately, MATLAB provides a function called regionprops, which can return “centroids”, to do just that.
+
+This is where it all comes together. With the coordinates of the each of our notes parameterized and our array of note thresholds, we iterate the vertical coordinate of each note through the vertical note thresholds, finding the correct value for each note. These notes are stored as integer values from one to seventeen, which correspond to the frequency of each note.
+#### Result - Notes Mask Image
+![](Readme%20Images/10_notes_mask.png)
+#### Result - Notes Image
+![](Readme%20Images/11_notes.png)
+#### Result - Note Coordinates
+![](Readme%20Images/12_note_coordinates.png)
+#### Result - Note Values
+![](Readme%20Images/13_note_values.png)
+
+### Compile & Play Song
+#### Source Code
+```matlab
+% compile notes into song
+song = [];
+t = 0:(1/FS):NOTE_LENGTH;
+for i = 1:length(notes)
+    song = [song VOLUME*sin(2*pi*NOTE_FREQS(notes(i))*t)];
+end
+ 
+% play song
+sound(song,FS);
+```
+#### Explanation
+With our notes fully quantized to their tonal range, we can conclude by playing out the sheet music. The frequencies of each note are stored in the NOTE_FREQS array, and with a simple calculation we can create an array of amplitude values at our chosen sample rate. Finally, we implement the sound function and play through the song.
+#### Result - Song Spectogram
+![](Readme%20Images/14_song.png)
