@@ -129,9 +129,8 @@ end
 ```
 #### Explanation
 Now that we have isolated the stave, we proceed to parameterizing the vertical coordinates of each of five lines in each stave. Despite marginally longer code for the section, the process is very easy. We simply start in the middle of image and increment down the centre. When we identify a logical true pixel, we record its position, set a flag, and carry on. We then wait for a false pixel, which tells us we have passed that line, reset the flag, and start the process over again.
-#### Result - Stave Coordinates
+#### Result - Stave Coordinates & Line Distance
 ![](Readme%20Images/5_stave_coordinates.png)
-#### Result - Line Distance
 ![](Readme%20Images/6_line_distance.png)
 
 ### Solving for Note Thresholds
@@ -204,7 +203,7 @@ end
 Before we attempt to isolate the notes themselves, we need to determine where the notes could possibly be located, so that we can discard other data – keeping in mind, our input could have words or other characters that could easily be confused with notes if not properly eliminated. We know the top and bottom of the staves are just the first and fifth stave lines. We then need to find the left and right edges. We identify these edges by starting on a stave line and tracing all the way along in each direction until we hit the end of the line.
 
 With the four bounds of the stave recorded, we use what we know about sheet music to determine the bounds of where notes could be located. We know that each stave begins with a clef, which we can discard, and that there is some dead space at the end. We also know that notes can be located within a few steps of the bottom and the top of the clef. By trial and error, we discover appropriate values to parameterize each of these four constants with.
-#### Result - Stave Bounds
+#### Result - Stave & Note Bounds
 ![](Readme%20Images/8_stave_bounds.png)
 #### Result - Note Bounds
 ![](Readme%20Images/9_note_bounds.png)
@@ -253,9 +252,8 @@ This is where it all comes together. With the coordinates of the each of our not
 ![](Readme%20Images/10_notes_mask.png)
 #### Result - Notes Image
 ![](Readme%20Images/11_notes.png)
-#### Result - Note Coordinates
+#### Result - Note Coordinates & Values
 ![](Readme%20Images/12_note_coordinates.png)
-#### Result - Note Values
 ![](Readme%20Images/13_note_values.png)
 
 ### Compile & Play Song
@@ -275,3 +273,6 @@ sound(song,FS);
 With our notes fully quantized to their tonal range, we can conclude by playing out the sheet music. The frequencies of each note are stored in the NOTE_FREQS array, and with a simple calculation we can create an array of amplitude values at our chosen sample rate. Finally, we implement the sound function and play through the song.
 #### Result - Song Spectogram
 ![](Readme%20Images/14_song.png)
+
+## Conclusions
+We set out to create a digital sheet music reader that is capable of accepting an image of sheet music and producing an audio output of the song in question, and we accomplished this goal. Our sheet music reader can accept a specified type of digital sheet music image, process this image, find the notes, and play it out. Looking forward, the top items to prioritize in the continued development of the system would be the ability to read music with a bass and treble clef, notes other than quarter notes, and of course the ability to process simultaneous notes. It would also be a worthy undertaking to development image registration and more advanced thresholding to gain the ability to process images taken of paper sheet music. This sort of functionality could be quite useful as an integrated smartphone app.
