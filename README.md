@@ -1,5 +1,5 @@
 # Sheet Music Reader
-**A sheet music reader that quantizes notes and outputs audio based on input images. Developed by John Matson in fall 2020 for BCIT's ELEX 7815, taught by John Dian.**
+>A sheet music reader that quantizes notes and outputs audio based on input images. Developed by John Matson in fall 2020 for BCIT's ELEX 7815, taught by John Dian.
 
 ## Usage
 The script accepts images in JPEG format. Based on current system functionality, images should adhere to the following conditions. Images must be:
@@ -14,13 +14,28 @@ The script accepts images in JPEG format. Based on current system functionality,
 
 Included in the project folder are three test images which the script is able to read without issue. These images are enclosed in the "Test Images" folder. The test image that is used to run the script is specified on line 24 of "sheet_music_reader.m".
 
+## Contents
+* [Background](#background)
+* [Overview](#overview)
+* [Implementation](#implementation)
+    * [Initial Setup](#initial-setup)
+    * [Point Processing](#point-processing)
+    * [Resizing](#resizing)
+    * [Morphological Stave Processing](#morphological-stave-processing)
+    * [Finding Stave Coordinates](#finding-stave-coordinates)
+    * [Solving for Note Thresholds](#solving-for-note-thresholds)
+    * [Computing Stave & Note Bounds](#computing-stave--note-bounds)
+    * [Finding Notes & Determining Their Tone Values](#finding-notes--determining-their-tone-values)
+    * [Compile & Play Song](#compile--play-song)
+* [Conclusions & Future Work](#conclusions--future-work)
+
 ## Background
 Sheet music is highly ubiquitous, and many people have large collections of old sheet music for which there is no digital version. A sheet music reader could digitize and preserve a library of old sheet music. However, the creation of a sheet music reader is not only useful on its own but has the potential to serve as the basis for a number of very useful applications. One can imagine an application that tracks a user’s piano playing against a piece of sheet music, to provide them with an accuracy score and help them improve their playing. This is just one example of the uses of such a system.
 
+If these conditions are met, the system should be able to read the music. The system will be capable of accepting sheet music with multiple staves, images with words and other characters, and music with many notes on the same stave. We will detail our implementation of this algorithm in section 3, examine three examples in section 4, and finally conclude in section 5 by discussing how our system could be improved and expanded in the future.
+
 ## Overview
 Our sheet music reader is designed to meet a few specifications. The reader will receive an input image of sheet music and will output audio, playing the notes of the sheet music. We have established a number of constraints on the input image to simplify the problem and allow us to meet our deadlines. These constraints are listed above in the usage section.
-
-If these conditions are met, the system should be able to read the music. The system will be capable of accepting sheet music with multiple staves, images with words and other characters, and music with many notes on the same stave. We will detail our implementation of this algorithm in section 3, examine three examples in section 4, and finally conclude in section 5 by discussing how our system could be improved and expanded in the future.
 
 ## Implementation
 Our sheet music reader is implemented using MATLAB, and we have contained the entire system to a single “.m” file. For each section, we will provide the MATLAB source code, explain the processing that is taking place, and - if applicable - display the processing output as executed for "music1.jpg".
