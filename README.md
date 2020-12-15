@@ -1,5 +1,5 @@
 # Sheet Music Reader
-**A sheet music reader that quantizes notes and outputs audio based on input images.**
+**A sheet music reader that quantizes notes and outputs audio based on input images. Developed by John Matson in fall 2020 for BCIT's ELEX 7815, taught by John Dian.**
 
 ## Usage
 The script accepts images in JPEG format. Based on current system functionality, images should adhere to the following conditions. Images must be:
