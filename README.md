@@ -62,12 +62,12 @@ NOTE_FREQS = [  220.00 246.94 261.63 293.66 329.63 349.23 ...
                 392.00 440.00 493.88 523.25 587.33 659.25 ...
                 698.46 783.99 880.00 987.77 1046.50 ];
  
-I = imread("Test Images/music1.jpg");
+I = imread("test-images/music1.jpg");
 ```
 #### Explanation
 We begin by defining a number of constants. The use of these constants will be shown in the following sections. We then read our image into the MATLAB workspace using the imread function.
 #### Result - Unprocessed Image
-![](Readme%20Images/1_unprocessed.png)
+![](readme-assets/1_unprocessed.png)
 
 ### Point Processing
 #### Source Code
@@ -79,10 +79,10 @@ I_inv = imcomplement(I_bin); % invert image so data is true
 #### Explanation
 Before we start looking at the image data itself, we need to pre-process the image. We start by using the rgb2gray function to convert the image from RGB to grayscale colour space, which simplifies our processing by eliminating irrelevant colour data. Next, we threshold our image to create a binary matrix using imbinarize. This function performs a sort of automatic thresholding, using Otsu’s method, to choose the threshold value that creates the most separation between the data above and below the threshold point. Finally, we invert our binary image using the imcomplement function so that the actual printing of the sheet music is “true”, while the background is “false”.
 #### Result - Binary Image
-![](Readme%20Images/2_binary.png)
+![](readme-assets/2_binary.png)
 
 #### Result - Binary Inverted Image
-![](Readme%20Images/3_binary_inverted.png)
+![](readme-assets/3_binary_inverted.png)
 
 ### Resizing
 #### Source Code
@@ -116,7 +116,7 @@ Morphological processing is a subcategory of image processing which involves the
 
 The first morphological function we implement is imopen, which actually performs two morphologic operations back-to-back: erosion and dilation. Without getting into the details of how these two processes work, suffice it to say that performing an opening removes logical ones in places where there are not enough other logical one “neighbors”, (with neighbors being defined by the structing element). After performing an opening, we are left with an image that essentially only contains the staves. Following this operation, we also perform a closing – which is the exact opposite of an opening – first executing a dilation, followed by an erosion. We perform this closing using a similar structuring element, in an attempt to heal any pixels gaps in the stave.
 #### Result - Stave Image
-![](Readme%20Images/4_stave.png)
+![](readme-assets/4_stave.png)
 
 ### Finding Stave Coordinates
 #### Source Code
@@ -145,8 +145,8 @@ end
 #### Explanation
 Now that we have isolated the stave, we proceed to parameterizing the vertical coordinates of each of five lines in each stave. Despite marginally longer code for the section, the process is very easy. We simply start in the middle of image and increment down the centre. When we identify a logical true pixel, we record its position, set a flag, and carry on. We then wait for a false pixel, which tells us we have passed that line, reset the flag, and start the process over again.
 #### Result - Stave Coordinates & Line Distance
-![](Readme%20Images/5_stave_coordinates.png)
-![](Readme%20Images/6_line_distance.png)
+![](readme-assets/5_stave_coordinates.png)
+![](readme-assets/6_line_distance.png)
 
 ### Solving for Note Thresholds
 #### Source Code
@@ -172,7 +172,7 @@ end
 #### Explanation
 With the coordinates of each of the stave lines recorded, we can now use the stave to calculate thresholds for the vertical coordinates of each note value. First, we need to get the distance in pixel distance between each of the stave lines by taking an average. With this information and a bit of musical theory, we can compute the note thresholds. Knowing that possible note locations are centered on the stave lines, centered between the stave lines, and on or between lines – above or below the staves, we can simply create threshold points halfway between each possible note location.
 #### Result - Note Value Thresholds
-![](Readme%20Images/7_note_value_thresholds.png)
+![](readme-assets/7_note_value_thresholds.png)
 
 ### Computing Stave & Note Bounds
 #### Source Code
@@ -219,9 +219,9 @@ Before we attempt to isolate the notes themselves, we need to determine where th
 
 With the four bounds of the stave recorded, we use what we know about sheet music to determine the bounds of where notes could be located. We know that each stave begins with a clef, which we can discard, and that there is some dead space at the end. We also know that notes can be located within a few steps of the bottom and the top of the clef. By trial and error, we discover appropriate values to parameterize each of these four constants with.
 #### Result - Stave & Note Bounds
-![](Readme%20Images/8_stave_bounds.png)
+![](readme-assets/8_stave_bounds.png)
 #### Result - Note Bounds
-![](Readme%20Images/9_note_bounds.png)
+![](readme-assets/9_note_bounds.png)
 
 ### Finding Notes & Determining Their Tone Values
 #### Source Code
@@ -264,12 +264,12 @@ It is now time to find the notes. We begin by creating another structured elemen
 
 This is where it all comes together. With the coordinates of the each of our notes parameterized and our array of note thresholds, we iterate the vertical coordinate of each note through the vertical note thresholds, finding the correct value for each note. These notes are stored as integer values from one to seventeen, which correspond to the frequency of each note.
 #### Result - Notes Mask Image
-![](Readme%20Images/10_notes_mask.png)
+![](readme-assets/10_notes_mask.png)
 #### Result - Notes Image
-![](Readme%20Images/11_notes.png)
+![](readme-assets/11_notes.png)
 #### Result - Note Coordinates & Values
-![](Readme%20Images/12_note_coordinates.png)
-![](Readme%20Images/13_note_values.png)
+![](readme-assets/12_note_coordinates.png)
+![](readme-assets/13_note_values.png)
 
 ### Compile & Play Song
 #### Source Code
@@ -287,7 +287,7 @@ sound(song,FS);
 #### Explanation
 With our notes fully quantized to their tonal range, we can conclude by playing out the sheet music. The frequencies of each note are stored in the NOTE_FREQS array, and with a simple calculation we can create an array of amplitude values at our chosen sample rate. Finally, we implement the sound function and play through the song.
 #### Result - Song Spectogram
-![](Readme%20Images/14_song.png)
+![](readme-assets/14_song.png)
 
 ## Conclusions & Future Work
 Our sheet music reader can accept a specified type of digital sheet music image, process this image, find the notes, and play it out. Looking forward, top items to prioritize for continued development would be the ability to read music with a bass and treble clef, the ability to read music notes other than quarter notes, and of course the ability to process multiple simultaneous notes. It would also be a worthy undertaking to develop image registration and more advanced thresholding to gain the ability to process images taken of paper sheet music. This sort of functionality could be quite useful as an integrated smartphone app.

@@ -21,7 +21,7 @@ NOTE_FREQS = [  220.00 246.94 261.63 293.66 329.63 349.23 ...
                 698.46 783.99 880.00 987.77 1046.50 ];
 
 
-I = imread("Test Images/music1.jpg");
+I = imread("test-images/music1.jpg");
 
 I_gray = rgb2gray(I); % convert to greyscale
 I_bin = imbinarize(I_gray); % threshold convert to binary image
